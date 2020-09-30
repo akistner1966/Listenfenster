@@ -4,7 +4,17 @@ import tkinter as tk
 import locale
 
 class listenfenster(object):
-    def __init__(self, parent, headlne, fields, content):
+    def __init__(self, parent, headlne, fields, content, srtndx=0, srtdir=True):
+        """
+        mit <strndx> wird das Feldes angegeben, nach dem sortiert
+        werden soll. Es gilt:
+        <srtndx> = 0 - sortieren nach Dateiname
+        <srtndx> = 1 - sortieren nach Extension und dann nach Dateiname
+        <srtndx> = 2 - sortieren nach Dateigröße
+        <srtndx> = 3 - sortieren nach Dateidatum
+        <strdir> = True: Es wird aufsteigend sortiert
+        <strdir> = False: Es wird absteigend sortiert
+        """
         self.top = tk.Toplevel(parent)
         tk.Label(self.top, text=headlne).pack()
         self.frameTop = tk.Frame(self.top) #Rahmen für Kopfzeile
@@ -19,6 +29,82 @@ class listenfenster(object):
         self.txtfeld.pack(side=tk.TOP)
         self.btnOK = tk.Button(self.frameDwn, text  ='OK', command=self.ok)
         self.btnOK.pack(side=tk.LEFT, padx=5, pady=5)
+        sortiert = False
+        while not sortiert:
+            sortiert = True
+            for cnt, dsatz in enumerate(content, 0):
+                if srtndx == 0: #sortieren nach Dateiname
+                    if cnt < len(content) - 1:
+                        dsnext = content[cnt + 1]
+                        if srtdir: #aufsteigend sortieren
+                            if dsatz[0] > dsnext[0]:
+                                sortiert = False
+                                dmy = content[cnt + 1]
+                                content[cnt + 1] = content[cnt]
+                                content[cnt] = dmy
+                        else: #absteigend sortieren
+                            if dsatz[0] < dsnext[0]:
+                                sortiert = False
+                                dmy = content[cnt + 1]
+                                content[cnt + 1] = content[cnt]
+                                content[cnt] = dmy
+                elif srtndx == 1: #sortieren nach Extension, dann Dateiname
+                    if cnt < len(content) - 1:
+                        dsnext = content[cnt + 1]
+                        dnxtnxt = dsnext[1] + ' ' + dsnext[0]
+                        dnxtact = dsatz[1] + ' ' + dsatz[0]
+                        if srtdir: #aufsteigend sortieren
+                            if dnxtact > dnxtnxt:
+                                sortiert = False
+                                dmy = content[cnt + 1]
+                                content[cnt + 1] = content[cnt]
+                                content[cnt] = dmy
+                        else: #absteigend sortieren
+                            if dnxtact < dnxtnxt:
+                                sortiert = False
+                                dmy = content[cnt + 1]
+                                content[cnt + 1] = content[cnt]
+                                content[cnt] = dmy
+                elif srtndx == 2: #sortieren nach Dateigröße
+                    if cnt < len(content) - 1:
+                        inplst = content[cnt + 1]
+                        grnxt = int(inplst[2].replace('.', ''))
+                        inplst = content[cnt]
+                        gract = int(inplst[2].replace('.', ''))
+                        if srtdir: #aufsteigend sortieren
+                            if gract > grnxt:
+                                sortiert = False
+                                dmy = content[cnt + 1]
+                                content[cnt + 1] = content[cnt]
+                                content[cnt] = dmy
+                        else: #absteigend sortieren
+                            if gract < grnxt:
+                                sortiert = False
+                                dmy = content[cnt + 1]
+                                content[cnt + 1] = content[cnt]
+                                content[cnt] = dmy
+                elif srtndx == 3: #sortieren nach Datum
+                    if cnt < len(content) - 1:
+                        inplst = content[cnt + 1]
+                        datlst = inplst[3].split('.')
+                        dtnxt = int(10000*datlst[2]) + 100*int(datlst[1]) + \
+                            int(datlst[0])
+                        inplst = content[cnt]
+                        datlst = inplst[3].split('.')
+                        dtact = int(10000*datlst[2]) + 100*int(datlst[1]) + \
+                            int(datlst[0])
+                        if srtdir: #aufsteigend sortieren
+                            if dtact > dtnxt:
+                                sortiert = False
+                                dmy = content[cnt + 1]
+                                content[cnt + 1] = content[cnt]
+                                content[cnt] = dmy
+                        else: #absteigend sortieren
+                            if dtact < dtnxt:
+                                sortiert = False
+                                dmy = content[cnt + 1]
+                                content[cnt + 1] = content[cnt]
+                                content[cnt] = dmy
         mxlen = [0]*4
         for dsatz in content: #Max-Längen ermitteln - Teil 1
             for cnt, ele in enumerate(dsatz, 0):
@@ -31,7 +117,8 @@ class listenfenster(object):
                 self.txthdln.insert(tk.END, ' ')
         for dsatz in content: #Textfeld füllen
             for cnt, ele in enumerate(dsatz, 0):
-                self.txtfeld.insert(tk.END, self._cuttrim(ele, cnt, mxlen[cnt]))
+                self.txtfeld.insert(tk.END,
+                                    self._cuttrim(ele, cnt, mxlen[cnt]))
                 if cnt < len(dsatz) - 1:
                     self.txtfeld.insert(tk.END, ' ')
                 else:
@@ -91,7 +178,7 @@ def mkfields():
     return(['Dateiname', 'Extension', 'Dateigröße', 'Dateidatum'])
 
 def showlist():
-    lf = listenfenster(root, 'Demoliste', fliste, dliste)
+    lf = listenfenster(root, 'Demoliste', fliste, dliste, 3, True)
 
 if __name__== "__main__":
     locale.setlocale(locale.LC_NUMERIC, '')
