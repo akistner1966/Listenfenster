@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 
 import tkinter as tk
+import tkinter.font as font
 import locale
 
 class listenfenster(object):
-    def __init__(self, parent, headlne, fields, content, srtndx=0, srtdir=True):
+    def __init__(self, parent, headlne, fields, content,
+                 srtndx=0, srtdir=True):
         """
         mit <strndx> wird das Feldes angegeben, nach dem sortiert
         werden soll. Es gilt:
@@ -15,6 +17,12 @@ class listenfenster(object):
         <strdir> = True: Es wird aufsteigend sortiert
         <strdir> = False: Es wird absteigend sortiert
         """
+        self.srtndx = srtndx
+        self.srtdir = srtdir
+        self.content = content
+        self.fields = fields
+        self.bfnt = font.Font(family='Helvetica', weight=font.BOLD)
+        self.nfnt = font.Font(family='Helvetica')
         self.top = tk.Toplevel(parent)
         tk.Label(self.top, text=headlne).pack()
         self.frameTop = tk.Frame(self.top) #Rahmen für Kopfzeile
@@ -23,99 +31,127 @@ class listenfenster(object):
         self.frameMid.pack(side=tk.TOP, fill=tk.BOTH)
         self.frameDwn = tk.Frame(self.top) #Rahmen für Buttons
         self.frameDwn.pack(side=tk.TOP, fill=tk.BOTH)
-        self.txthdln = tk.Text(self.frameTop, height=5, width=150)
+        self.txthdln = tk.Text(self.frameTop, height=2, width=150)
         self.txthdln.pack(side=tk.TOP)
         self.txtfeld = tk.Text(self.frameTop, height=40, width=150)
         self.txtfeld.pack(side=tk.TOP)
-        self.btnOK = tk.Button(self.frameDwn, text  ='OK', command=self.ok)
+        self.btnOK = tk.Button(self.frameDwn, text  ='OK', command=self._ok,
+                               font=self.nfnt)
         self.btnOK.pack(side=tk.LEFT, padx=5, pady=5)
+        self.lbl1 = tk.Label(self.frameDwn, text='     Sortieren nach =>')
+        self.lbl1.pack(side=tk.LEFT, padx=5, pady=5)
+        self.btnSrtDn = tk.Button(self.frameDwn, text  ='Dateiname',
+                                  command=self._srtname, font=self.nfnt)
+        self.btnSrtDn.pack(side=tk.LEFT, padx=5, pady=5)
+        self.btnSrtXtn = tk.Button(self.frameDwn, text  ='Extension',
+                                   command=self._srtextn, font=self.nfnt)
+        self.btnSrtXtn.pack(side=tk.LEFT, padx=5, pady=5)
+        self.btnSrtGro = tk.Button(self.frameDwn, text  ='Größe',
+                                   command=self._srtsize, font=self.nfnt)
+        self.btnSrtGro.pack(side=tk.LEFT, padx=5, pady=5)
+        self.btnSrtDat = tk.Button(self.frameDwn, text  ='Datum',
+                                   command=self._srtdate, font=self.nfnt)
+        self.btnSrtDat.pack(side=tk.LEFT, padx=5, pady=5)
+        self.lbl2 = tk.Label(self.frameDwn, text='     Sortierrichtung =>')
+        self.lbl2.pack(side=tk.LEFT, padx=5, pady=5)
+        self.btnSrtUp = tk.Button(self.frameDwn, text  ='Aufsteigend',
+                                  command=self._srtup, font=self.nfnt)
+        self.btnSrtUp.pack(side=tk.LEFT, padx=5, pady=5)
+        self.btnSrtDwn = tk.Button(self.frameDwn, text  ='Absteigend',
+                                  command=self._srtdn, font=self.nfnt)
+        self.btnSrtDwn.pack(side=tk.LEFT, padx=5, pady=5)
+        self._ausgabe()
+
+    def _ausgabe(self):
+        self.txtfeld.delete("1.0","end")
+        self.txthdln.delete("1.0","end")
         sortiert = False
         while not sortiert:
             sortiert = True
-            for cnt, dsatz in enumerate(content, 0):
-                if srtndx == 0: #sortieren nach Dateiname
-                    if cnt < len(content) - 1:
-                        dsnext = content[cnt + 1]
-                        if srtdir: #aufsteigend sortieren
+            for cnt, dsatz in enumerate(self.content, 0):
+                if self.srtndx == 0: #sortieren nach Dateiname
+                    if cnt < len(self.content) - 1:
+                        dsnext = self.content[cnt + 1]
+                        if self.srtdir: #aufsteigend sortieren
                             if dsatz[0] > dsnext[0]:
                                 sortiert = False
-                                dmy = content[cnt + 1]
-                                content[cnt + 1] = content[cnt]
-                                content[cnt] = dmy
+                                dmy = self.content[cnt + 1]
+                                self.content[cnt + 1] = self.content[cnt]
+                                self.content[cnt] = dmy
                         else: #absteigend sortieren
                             if dsatz[0] < dsnext[0]:
                                 sortiert = False
-                                dmy = content[cnt + 1]
-                                content[cnt + 1] = content[cnt]
-                                content[cnt] = dmy
-                elif srtndx == 1: #sortieren nach Extension, dann Dateiname
-                    if cnt < len(content) - 1:
-                        dsnext = content[cnt + 1]
+                                dmy = self.content[cnt + 1]
+                                self.content[cnt + 1] = self.content[cnt]
+                                self.content[cnt] = dmy
+                elif self.srtndx == 1: #sortieren nach Extension, dann Dateiname
+                    if cnt < len(self.content) - 1:
+                        dsnext = self.content[cnt + 1]
                         dnxtnxt = dsnext[1] + ' ' + dsnext[0]
                         dnxtact = dsatz[1] + ' ' + dsatz[0]
-                        if srtdir: #aufsteigend sortieren
+                        if self.srtdir: #aufsteigend sortieren
                             if dnxtact > dnxtnxt:
                                 sortiert = False
-                                dmy = content[cnt + 1]
-                                content[cnt + 1] = content[cnt]
-                                content[cnt] = dmy
+                                dmy = self.content[cnt + 1]
+                                self.content[cnt + 1] = self.content[cnt]
+                                self.content[cnt] = dmy
                         else: #absteigend sortieren
                             if dnxtact < dnxtnxt:
-                                sortiert = False
-                                dmy = content[cnt + 1]
-                                content[cnt + 1] = content[cnt]
-                                content[cnt] = dmy
-                elif srtndx == 2: #sortieren nach Dateigröße
-                    if cnt < len(content) - 1:
-                        inplst = content[cnt + 1]
+                                self.sortiert = False
+                                dmy = self.content[cnt + 1]
+                                self.content[cnt + 1] = self.content[cnt]
+                                self.content[cnt] = dmy
+                elif self.srtndx == 2: #sortieren nach Dateigröße
+                    if cnt < len(self.content) - 1:
+                        inplst = self.content[cnt + 1]
                         grnxt = int(inplst[2].replace('.', ''))
-                        inplst = content[cnt]
+                        inplst = self.content[cnt]
                         gract = int(inplst[2].replace('.', ''))
-                        if srtdir: #aufsteigend sortieren
+                        if self.srtdir: #aufsteigend sortieren
                             if gract > grnxt:
                                 sortiert = False
-                                dmy = content[cnt + 1]
-                                content[cnt + 1] = content[cnt]
-                                content[cnt] = dmy
+                                dmy = self.content[cnt + 1]
+                                self.content[cnt + 1] = self.content[cnt]
+                                self.content[cnt] = dmy
                         else: #absteigend sortieren
                             if gract < grnxt:
                                 sortiert = False
-                                dmy = content[cnt + 1]
-                                content[cnt + 1] = content[cnt]
-                                content[cnt] = dmy
-                elif srtndx == 3: #sortieren nach Datum
-                    if cnt < len(content) - 1:
-                        inplst = content[cnt + 1]
+                                dmy = self.content[cnt + 1]
+                                self.content[cnt + 1] = self.content[cnt]
+                                self.content[cnt] = dmy
+                elif self.srtndx == 3: #sortieren nach Datum
+                    if cnt < len(self.content) - 1:
+                        inplst = self.content[cnt + 1]
                         datlst = inplst[3].split('.')
                         dtnxt = int(10000*datlst[2]) + 100*int(datlst[1]) + \
                             int(datlst[0])
-                        inplst = content[cnt]
+                        inplst = self.content[cnt]
                         datlst = inplst[3].split('.')
                         dtact = int(10000*datlst[2]) + 100*int(datlst[1]) + \
                             int(datlst[0])
-                        if srtdir: #aufsteigend sortieren
+                        if self.srtdir: #aufsteigend sortieren
                             if dtact > dtnxt:
                                 sortiert = False
-                                dmy = content[cnt + 1]
-                                content[cnt + 1] = content[cnt]
-                                content[cnt] = dmy
+                                dmy = self.content[cnt + 1]
+                                self.content[cnt + 1] = self.content[cnt]
+                                self.content[cnt] = dmy
                         else: #absteigend sortieren
                             if dtact < dtnxt:
                                 sortiert = False
-                                dmy = content[cnt + 1]
-                                content[cnt + 1] = content[cnt]
-                                content[cnt] = dmy
+                                dmy = self.content[cnt + 1]
+                                self.content[cnt + 1] = self.content[cnt]
+                                self.content[cnt] = dmy
         mxlen = [0]*4
-        for dsatz in content: #Max-Längen ermitteln - Teil 1
+        for dsatz in self.content: #Max-Längen - Teil 1
             for cnt, ele in enumerate(dsatz, 0):
                 mxlen[cnt] = max(mxlen[cnt], len(ele))
-        for cnt, ele in enumerate(fields, 0): #Max-Längen ermitteln - Teil 2
+        for cnt, ele in enumerate(self.fields, 0): #Max-Längen - Teil 2
             mxlen[cnt] = max(mxlen[cnt], len(ele))
-        for cnt, ele in enumerate(fields, 0):
+        for cnt, ele in enumerate(self.fields, 0):
             self.txthdln.insert(tk.END, ele)
-            if cnt < len(fields) - 1:
+            if cnt < len(self.fields) - 1:
                 self.txthdln.insert(tk.END, ' ')
-        for dsatz in content: #Textfeld füllen
+        for dsatz in self.content: #Textfeld füllen
             for cnt, ele in enumerate(dsatz, 0):
                 self.txtfeld.insert(tk.END,
                                     self._cuttrim(ele, cnt, mxlen[cnt]))
@@ -123,6 +159,31 @@ class listenfenster(object):
                     self.txtfeld.insert(tk.END, ' ')
                 else:
                     self.txtfeld.insert(tk.END, '\n')
+        self._btnconfig()
+
+    def _srtname(self):
+        self.srtndx = 0 #sortieren nach Dateiname
+        self._ausgabe()
+
+    def _srtextn(self):
+        self.srtndx = 1 #sortieren nach Extension und dann nach Dateiname
+        self._ausgabe()
+
+    def _srtsize(self): #sortieren nach Dateigröße
+        self.srtndx = 2
+        self._ausgabe()
+
+    def _srtdate(self):
+        self.srtndx = 3 #sortieren nach Dateidatum
+        self._ausgabe()
+
+    def _srtup(self):
+        self.srtdir = True
+        self._ausgabe()
+
+    def _srtdn(self):
+        self.srtdir = False
+        self._ausgabe()
 
     def _cuttrim(self, ein, ndx, mxlen):
         if ndx != 2: #linksbündig
@@ -133,8 +194,28 @@ class listenfenster(object):
                 ein = (mxlen - len(ein))*' ' + ein
         return(ein)
 
-    def ok(self):
+    def _ok(self):
         self.top.destroy()
+
+    def _btnconfig(self):
+        self.btnSrtDn.config(font=self.nfnt)
+        self.btnSrtXtn.config(font=self.nfnt)
+        self.btnSrtGro.config(font=self.nfnt)
+        self.btnSrtDat.config(font=self.nfnt)
+        self.btnSrtUp.config(font=self.nfnt)
+        self.btnSrtDwn.config(font=self.nfnt)
+        if self.srtndx == 0: #sortieren nach Dateiname
+            self.btnSrtDn.config(font=self.bfnt)
+        elif self.srtndx == 1: #sortieren nach Extension dann nach Dateiname
+            self.btnSrtXtn.config(font=self.bfnt)
+        elif self.srtndx == 2: #sortieren nach Dateigröße
+            self.btnSrtGro.config(font=self.bfnt)
+        elif self.srtndx == 3: #sortieren nach Dateidatum
+            self.btnSrtDat.config(font=self.bfnt)
+        if self.srtdir: #aufsteigend sortieren
+            self.btnSrtUp.config(font=self.bfnt)
+        else: #absteigend sortieren
+            self.btnSrtDwn.config(font=self.bfnt)
 
 def mkstr(einlst):
     einlst[2] = locale.format('%d', einlst[2], 1)
