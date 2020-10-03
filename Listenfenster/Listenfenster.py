@@ -3,6 +3,7 @@
 import tkinter as tk
 import tkinter.font as font
 import locale
+from random import *
 
 class listenfenster(object):
     def __init__(self, parent, headlne, fields, content,
@@ -221,38 +222,36 @@ def mkstr(einlst):
     einlst[2] = locale.format('%d', einlst[2], 1)
     return(einlst)
 
+def vornull(ein):
+    if ein >= 10:
+        return(str(ein))
+    else:
+        return('0' + str(ein))
+
 def mklst():
     dlst = []
-    ele = ['A.xls', 'xls', 260, '01.12.2001']
-    dlst.append(mkstr(ele))
-    ele = ['B.xls', 'xls', 1350, '01.12.2004']
-    dlst.append(mkstr(ele))
-    ele = ['C.xls', 'xls', 12260, '01.11.2001']
-    dlst.append(mkstr(ele))
-    ele = ['A.txt', 'txt', 260, '11.12.2011']
-    dlst.append(mkstr(ele))
-    ele = ['B.txt', 'txt', 1350, '10.12.2014']
-    dlst.append(mkstr(ele))
-    ele = ['C.txt', 'txt', 12260, '01.08.2011']
-    dlst.append(mkstr(ele))
-    ele = ['A.jpg', 'jpg', 260, '01.01.2011']
-    dlst.append(mkstr(ele))
-    ele = ['B.jpg', 'jpg', 1350, '01.07.2007']
-    dlst.append(mkstr(ele))
-    ele = ['C.jpg', 'jpg', 12260, '01.04.2016']
-    dlst.append(mkstr(ele))
-    ele = ['A.png', 'png', 260, '15.12.2011']
-    dlst.append(mkstr(ele))
-    ele = ['B.png', 'png', 1350, '18.12.2014']
-    dlst.append(mkstr(ele))
-    ele = ['C.png', 'png', 12260, '04.08.2011']
-    dlst.append(mkstr(ele))
-    ele = ['A.doc', 'doc', 260, '12.03.2020']
-    dlst.append(mkstr(ele))
-    ele = ['B.doc', 'doc', 21350, '18.08.2019']
-    dlst.append(mkstr(ele))
-    ele = ['C.doc', 'doc', 212260, '08.04.2010']
-    dlst.append(mkstr(ele))
+    xtnlst = ['doc', 'xls', 'ppt', 'txt', 'bat', 'jpg', 'png', 'cdr']
+    bcnt = 65 #ASCII-Code für 'A'
+    zcnt = 48 #ASCII-Code für '0'
+    for i in range(30):
+        dmo = randint(1, 12)
+        if dmo == 2:
+            dta = randint(1, 28)
+        elif dmo in [1, 3, 5, 7, 8, 10, 12]:
+            dta = randint(1, 31)
+        else:
+            dta = randint(1, 30)
+        dja = 2000 + randint(0, 19)
+        datstr = vornull(dta) + '.' + vornull(dmo) + '.' + str(dja)
+        dgr = randint(1, 100000)
+        xtnptr = randint(0, 7)
+        dname = chr(bcnt) + chr(zcnt)
+        zcnt += 1
+        if zcnt > 57:
+            zcnt = 48
+            bcnt +=1
+        ele = [dname + '.' + xtnlst[xtnptr], xtnlst[xtnptr], dgr, datstr]
+        dlst.append(mkstr(ele))
     return(dlst)
 
 def mkfields():
