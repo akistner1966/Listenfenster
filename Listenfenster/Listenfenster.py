@@ -2,7 +2,7 @@
 
 import tkinter as tk
 import tkinter.font as font
-import locale
+import locale as lcl
 from random import *
 import sqlite3 as sql3
 
@@ -71,8 +71,12 @@ class listenfenster(object):
         cursor = conn.execute('SELECT * FROM DATLISTE')
         for row in cursor:
             for cnt, ele in enumerate(row, 0):
-                mxlen[cnt] = max(mxlen[cnt], len(str(ele)))
+                if cnt != 3:
+                    mxlen[cnt] = max(mxlen[cnt], len(str(ele)))
+                else: #Dateigröße => Tausenderpunkte!
+                    mxlen[cnt] = max(mxlen[cnt], len(lcl.format('%d', ele, 1)))
         conn.close()
+        mxlen[4] += 2 #Punkte für das Datum berücksichtigen
         for cnt, ele in enumerate(self.fields, 0):
             mxlen[cnt] = max(mxlen[cnt], len(str(ele)))
             self.txthdln.insert(tk.END, ele)
@@ -87,18 +91,28 @@ class listenfenster(object):
         if self.srtndx == 0: #sortieren nach Dateiname
             cursor = conn.execute(sqlstr + 'NAME' + sqldir)
         if self.srtndx == 1: #sortieren nach Extension dann nach Dateiname
-            cursor = conn.execute(sqlstr + 'EXTN' + sqldir)
+            cursor = conn.execute(sqlstr + 'EXTN, NAME' + sqldir)
         if self.srtndx == 2: #sortieren nach Dateigröße
             cursor = conn.execute(sqlstr + 'SIZE' + sqldir)
         if self.srtndx == 3: #sortieren nach Dateidatum
             cursor = conn.execute(sqlstr + 'FILEDATE' + sqldir)
         for row in cursor:
             for cnt, ele in enumerate(row, 0):
+                estr = str(ele)
                 if cnt > 0:
-                    if len(str(ele)) < mxlen[cnt]:
-                        elestr = str(ele) + ' '*(mxlen[cnt] - len(str(ele)))
-                    else:
-                        elestr = str(ele)
+                    if cnt == 4: #Datum
+                        estr = estr[6:8] + '.' + estr[4:6] + '.' + estr[0:4]
+                    elif cnt == 3: #Dateigröße
+                        estr = lcl.format('%d', ele, 1)
+                        if len(estr) < mxlen[cnt]:
+                            elestr = ' '*(mxlen[cnt] - len(estr)) + estr
+                        else:
+                            elestr = estr
+                    if cnt != 3:
+                        if len(estr) < mxlen[cnt]:
+                            elestr = estr + ' '*(mxlen[cnt] - len(estr))
+                        else:
+                            elestr = estr
                     self.txtfeld.insert(tk.END, elestr)
                     if cnt < len(row) - 1:
                         self.txtfeld.insert(tk.END, ' ')
@@ -225,8 +239,8 @@ def quote(ein):
     return('"' + ein + '"')
 
 if __name__== "__main__":
-    locale.setlocale(locale.LC_NUMERIC, '')
-    dbname = 'verzeichnis.db'
+    lcl.setlocale(lcl.LC_NUMERIC, '')
+    dbname = 'verzeichnis.db' #Datenbank wird im Arbeitsspeicher abgebildet
     root = tk.Tk()
     fliste = mkfields()
     mklst()
