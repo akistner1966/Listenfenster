@@ -4,10 +4,10 @@ import tkinter as tk
 import tkinter.font as font
 import locale
 from random import *
+import sqlite3 as sql3
 
 class listenfenster(object):
-    def __init__(self, parent, headlne, fields, content,
-                 srtndx=0, srtdir=True):
+    def __init__(self, parent, headlne, fields, db_name, srtndx=0, srtdir=True):
         """
         mit <strndx> wird das Feldes angegeben, nach dem sortiert
         werden soll. Es gilt:
@@ -18,9 +18,9 @@ class listenfenster(object):
         <strdir> = True: Es wird aufsteigend sortiert
         <strdir> = False: Es wird absteigend sortiert
         """
+        self.dbname = db_name
         self.srtndx = srtndx
         self.srtdir = srtdir
-        self.content = content
         self.fields = fields
         self.bfnt = font.Font(family='Helvetica', weight=font.BOLD)
         self.nfnt = font.Font(family='Helvetica')
@@ -64,102 +64,46 @@ class listenfenster(object):
         self._ausgabe()
 
     def _ausgabe(self):
+        mxlen = 5*[0]
         self.txtfeld.delete("1.0","end")
         self.txthdln.delete("1.0","end")
-        sortiert = False
-        while not sortiert:
-            sortiert = True
-            for cnt, dsatz in enumerate(self.content, 0):
-                if self.srtndx == 0: #sortieren nach Dateiname
-                    if cnt < len(self.content) - 1:
-                        dsnext = self.content[cnt + 1]
-                        if self.srtdir: #aufsteigend sortieren
-                            if dsatz[0] > dsnext[0]:
-                                sortiert = False
-                                dmy = self.content[cnt + 1]
-                                self.content[cnt + 1] = self.content[cnt]
-                                self.content[cnt] = dmy
-                        else: #absteigend sortieren
-                            if dsatz[0] < dsnext[0]:
-                                sortiert = False
-                                dmy = self.content[cnt + 1]
-                                self.content[cnt + 1] = self.content[cnt]
-                                self.content[cnt] = dmy
-                elif self.srtndx == 1: #sortieren nach Extension, dann Dateiname
-                    if cnt < len(self.content) - 1:
-                        dsnext = self.content[cnt + 1]
-                        dnxtnxt = dsnext[1] + ' ' + dsnext[0]
-                        dnxtact = dsatz[1] + ' ' + dsatz[0]
-                        if self.srtdir: #aufsteigend sortieren
-                            if dnxtact > dnxtnxt:
-                                sortiert = False
-                                dmy = self.content[cnt + 1]
-                                self.content[cnt + 1] = self.content[cnt]
-                                self.content[cnt] = dmy
-                        else: #absteigend sortieren
-                            if dnxtact < dnxtnxt:
-                                self.sortiert = False
-                                dmy = self.content[cnt + 1]
-                                self.content[cnt + 1] = self.content[cnt]
-                                self.content[cnt] = dmy
-                elif self.srtndx == 2: #sortieren nach Dateigröße
-                    if cnt < len(self.content) - 1:
-                        inplst = self.content[cnt + 1]
-                        grnxt = int(inplst[2].replace('.', ''))
-                        inplst = self.content[cnt]
-                        gract = int(inplst[2].replace('.', ''))
-                        if self.srtdir: #aufsteigend sortieren
-                            if gract > grnxt:
-                                sortiert = False
-                                dmy = self.content[cnt + 1]
-                                self.content[cnt + 1] = self.content[cnt]
-                                self.content[cnt] = dmy
-                        else: #absteigend sortieren
-                            if gract < grnxt:
-                                sortiert = False
-                                dmy = self.content[cnt + 1]
-                                self.content[cnt + 1] = self.content[cnt]
-                                self.content[cnt] = dmy
-                elif self.srtndx == 3: #sortieren nach Datum
-                    if cnt < len(self.content) - 1:
-                        inplst = self.content[cnt + 1]
-                        datlst = inplst[3].split('.')
-                        dtnxt = int(10000*datlst[2]) + 100*int(datlst[1]) + \
-                            int(datlst[0])
-                        inplst = self.content[cnt]
-                        datlst = inplst[3].split('.')
-                        dtact = int(10000*datlst[2]) + 100*int(datlst[1]) + \
-                            int(datlst[0])
-                        if self.srtdir: #aufsteigend sortieren
-                            if dtact > dtnxt:
-                                sortiert = False
-                                dmy = self.content[cnt + 1]
-                                self.content[cnt + 1] = self.content[cnt]
-                                self.content[cnt] = dmy
-                        else: #absteigend sortieren
-                            if dtact < dtnxt:
-                                sortiert = False
-                                dmy = self.content[cnt + 1]
-                                self.content[cnt + 1] = self.content[cnt]
-                                self.content[cnt] = dmy
-        mxlen = [0]*4
-        for dsatz in self.content: #Max-Längen - Teil 1
-            for cnt, ele in enumerate(dsatz, 0):
-                mxlen[cnt] = max(mxlen[cnt], len(ele))
-        for cnt, ele in enumerate(self.fields, 0): #Max-Längen - Teil 2
-            mxlen[cnt] = max(mxlen[cnt], len(ele))
+        conn = sql3.connect(self.dbname)
+        cursor = conn.execute('SELECT * FROM DATLISTE')
+        for row in cursor:
+            for cnt, ele in enumerate(row, 0):
+                mxlen[cnt] = max(mxlen[cnt], len(str(ele)))
+        conn.close()
         for cnt, ele in enumerate(self.fields, 0):
+            mxlen[cnt] = max(mxlen[cnt], len(str(ele)))
             self.txthdln.insert(tk.END, ele)
             if cnt < len(self.fields) - 1:
                 self.txthdln.insert(tk.END, ' ')
-        for dsatz in self.content: #Textfeld füllen
-            for cnt, ele in enumerate(dsatz, 0):
-                self.txtfeld.insert(tk.END,
-                                    self._cuttrim(ele, cnt, mxlen[cnt]))
-                if cnt < len(dsatz) - 1:
-                    self.txtfeld.insert(tk.END, ' ')
-                else:
-                    self.txtfeld.insert(tk.END, '\n')
+        conn = sql3.connect(self.dbname)
+        sqlstr = 'SELECT * FROM DATLISTE ORDER BY '
+        if self.srtdir: #Aufsteigend sortieren
+            sqldir = ' ASC'
+        else: #Absteigend sortieren
+            sqldir = ' DESC'
+        if self.srtndx == 0: #sortieren nach Dateiname
+            cursor = conn.execute(sqlstr + 'NAME' + sqldir)
+        if self.srtndx == 1: #sortieren nach Extension dann nach Dateiname
+            cursor = conn.execute(sqlstr + 'EXTN' + sqldir)
+        if self.srtndx == 2: #sortieren nach Dateigröße
+            cursor = conn.execute(sqlstr + 'SIZE' + sqldir)
+        if self.srtndx == 3: #sortieren nach Dateidatum
+            cursor = conn.execute(sqlstr + 'FILEDATE' + sqldir)
+        for row in cursor:
+            for cnt, ele in enumerate(row, 0):
+                if cnt > 0:
+                    if len(str(ele)) < mxlen[cnt]:
+                        elestr = str(ele) + ' '*(mxlen[cnt] - len(str(ele)))
+                    else:
+                        elestr = str(ele)
+                    self.txtfeld.insert(tk.END, elestr)
+                    if cnt < len(row) - 1:
+                        self.txtfeld.insert(tk.END, ' ')
+            self.txtfeld.insert(tk.END, '\n')
+        conn.close()
         self._btnconfig()
 
     def _srtname(self):
@@ -229,11 +173,24 @@ def vornull(ein):
         return('0' + str(ein))
 
 def mklst():
+    conn = sql3.connect(dbname)
+    droptable = 'DROP TABLE DATLISTE'
+    try:
+        conn.execute(droptable)
+    except:
+        pass
+    conn.close()
+    conn = sql3.connect(dbname)
+    sqlcmd = 'CREATE TABLE IF NOT EXISTS DATLISTE (\
+    ID INTEGER PRIMARY KEY, NAME TEXT NOT NULL, \
+    EXTN TEXT NOT NULL, SIZE INTEGER NOT NULL, \
+    FILEDATE INTEGER NOT NULL);'
+    conn.execute(sqlcmd)
     dlst = []
     xtnlst = ['doc', 'xls', 'ppt', 'txt', 'bat', 'jpg', 'png', 'cdr']
     bcnt = 65 #ASCII-Code für 'A'
     zcnt = 48 #ASCII-Code für '0'
-    for i in range(30):
+    for i in range(100):
         dmo = randint(1, 12)
         if dmo == 2:
             dta = randint(1, 28)
@@ -242,29 +199,37 @@ def mklst():
         else:
             dta = randint(1, 30)
         dja = 2000 + randint(0, 19)
-        datstr = vornull(dta) + '.' + vornull(dmo) + '.' + str(dja)
+        datstr = str(dja) + vornull(dta) + vornull(dmo)
         dgr = randint(1, 100000)
         xtnptr = randint(0, 7)
-        dname = chr(bcnt) + chr(zcnt)
+        dname = chr(bcnt) + chr(zcnt) + '.' + xtnlst[xtnptr]
         zcnt += 1
         if zcnt > 57:
             zcnt = 48
             bcnt +=1
-        ele = [dname + '.' + xtnlst[xtnptr], xtnlst[xtnptr], dgr, datstr]
-        dlst.append(mkstr(ele))
-    return(dlst)
+        insstr = 'INSERT INTO DATLISTE (ID,NAME,EXTN,SIZE,FILEDATE)'
+        insstr += 'VALUES(' + str(i) + ','
+        insstr += quote(dname) + ',' + quote(xtnlst[xtnptr])
+        insstr += ',' + str(dgr) + ',' + datstr + ');'
+        conn.execute(insstr)
+    conn.commit()
+    conn.close()
 
 def mkfields():
     return(['Dateiname', 'Extension', 'Dateigröße', 'Dateidatum'])
 
 def showlist():
-    lf = listenfenster(root, 'Demoliste', fliste, dliste, 3, True)
+    lf = listenfenster(root, 'Demoliste', fliste, dbname, 2, False)
+
+def quote(ein):
+    return('"' + ein + '"')
 
 if __name__== "__main__":
     locale.setlocale(locale.LC_NUMERIC, '')
+    dbname = 'verzeichnis.db'
     root = tk.Tk()
-    dliste = mklst()
     fliste = mkfields()
+    mklst()
     menubar = tk.Menu(root)
     filemenu = tk.Menu(menubar, tearoff=0)
     menubar.add_cascade(label='Datei', underline=0, menu = filemenu)
