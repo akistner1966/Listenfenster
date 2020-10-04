@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
+#@author: comet
+
 
 import tkinter as tk
 import tkinter.font as font
+from tkinter import filedialog
 import locale as lcl
 from random import *
 import sqlite3 as sql3
@@ -34,32 +37,46 @@ class listenfenster(object):
         self.frameDwn.pack(side=tk.TOP, fill=tk.BOTH)
         self.txthdln = tk.Text(self.frameTop, height=2, width=150)
         self.txthdln.pack(side=tk.TOP)
-        self.txtfeld = tk.Text(self.frameTop, height=40, width=150)
-        self.txtfeld.pack(side=tk.TOP)
+        self.vbar = tk.Scrollbar(self.frameMid)
+        self.vbar.pack(side=tk.RIGHT, fill=tk.Y)
+        self.txtfeld = tk.Text(self.frameMid, height=40, width=150)
+        self.txtfeld.pack(side=tk.LEFT, fill=tk.Y)
+        self.vbar.config(command=self.txtfeld.yview)
+        self.txtfeld.config(yscrollcommand=self.vbar.set)
         self.btnOK = tk.Button(self.frameDwn, text  ='OK', command=self._ok,
-                               font=self.nfnt)
+                               font=self.nfnt, underline = 0)
         self.btnOK.pack(side=tk.LEFT, padx=5, pady=5)
+        self.btnSave = tk.Button(self.frameDwn, text  ='Speichern',
+                                 command=self._save, font=self.nfnt,
+                                 underline = 0)
+        self.btnSave.pack(side=tk.LEFT, padx=5, pady=5)
         self.lbl1 = tk.Label(self.frameDwn, text='     Sortieren nach =>')
         self.lbl1.pack(side=tk.LEFT, padx=5, pady=5)
         self.btnSrtDn = tk.Button(self.frameDwn, text  ='Dateiname',
-                                  command=self._srtname, font=self.nfnt)
+                                  command=self._srtname, font=self.nfnt,
+                                  underline = 0)
         self.btnSrtDn.pack(side=tk.LEFT, padx=5, pady=5)
         self.btnSrtXtn = tk.Button(self.frameDwn, text  ='Extension',
-                                   command=self._srtextn, font=self.nfnt)
+                                   command=self._srtextn, font=self.nfnt,
+                                  underline = 0)
         self.btnSrtXtn.pack(side=tk.LEFT, padx=5, pady=5)
         self.btnSrtGro = tk.Button(self.frameDwn, text  ='Größe',
-                                   command=self._srtsize, font=self.nfnt)
+                                   command=self._srtsize, font=self.nfnt,
+                                  underline = 0)
         self.btnSrtGro.pack(side=tk.LEFT, padx=5, pady=5)
         self.btnSrtDat = tk.Button(self.frameDwn, text  ='Datum',
-                                   command=self._srtdate, font=self.nfnt)
+                                   command=self._srtdate, font=self.nfnt,
+                                  underline = 2)
         self.btnSrtDat.pack(side=tk.LEFT, padx=5, pady=5)
         self.lbl2 = tk.Label(self.frameDwn, text='     Sortierrichtung =>')
         self.lbl2.pack(side=tk.LEFT, padx=5, pady=5)
         self.btnSrtUp = tk.Button(self.frameDwn, text  ='Aufsteigend',
-                                  command=self._srtup, font=self.nfnt)
+                                  command=self._srtup, font=self.nfnt,
+                                  underline = 1)
         self.btnSrtUp.pack(side=tk.LEFT, padx=5, pady=5)
         self.btnSrtDwn = tk.Button(self.frameDwn, text  ='Absteigend',
-                                  command=self._srtdn, font=self.nfnt)
+                                  command=self._srtdn, font=self.nfnt,
+                                  underline = 1)
         self.btnSrtDwn.pack(side=tk.LEFT, padx=5, pady=5)
         self._ausgabe()
 
@@ -67,6 +84,7 @@ class listenfenster(object):
         mxlen = 5*[0]
         self.txtfeld.delete("1.0","end")
         self.txthdln.delete("1.0","end")
+        self.feldtext = ''
         conn = sql3.connect(self.dbname)
         cursor = conn.execute('SELECT * FROM DATLISTE')
         for row in cursor:
@@ -80,8 +98,10 @@ class listenfenster(object):
         for cnt, ele in enumerate(self.fields, 0):
             mxlen[cnt] = max(mxlen[cnt], len(str(ele)))
             self.txthdln.insert(tk.END, ele)
+            self.feldtext += ele
             if cnt < len(self.fields) - 1:
                 self.txthdln.insert(tk.END, ' ')
+                self.feldtext += ' '
         conn = sql3.connect(self.dbname)
         sqlstr = 'SELECT * FROM DATLISTE ORDER BY '
         if self.srtdir: #Aufsteigend sortieren
@@ -114,9 +134,12 @@ class listenfenster(object):
                         else:
                             elestr = estr
                     self.txtfeld.insert(tk.END, elestr)
+                    self.feldtext += elestr
                     if cnt < len(row) - 1:
                         self.txtfeld.insert(tk.END, ' ')
+                        self.feldtext += ' '
             self.txtfeld.insert(tk.END, '\n')
+            self.feldtext += '\n'
         conn.close()
         self._btnconfig()
 
@@ -155,6 +178,17 @@ class listenfenster(object):
 
     def _ok(self):
         self.top.destroy()
+
+    def _save(self):
+        savedn = filedialog.\
+            asksaveasfilename(initialdir = 'D:/',
+                              title = 'Dateiliste speichern',
+                              filetypes = (('txt-Dateien', '*.txt'),
+                                           ('alle Dateien', '*.*')))
+        if savedn != '': #Inhalt des Dateifensters speichern
+            fobj = open(savedn, 'w')
+            fobj.write(self.feldtext)
+            fobj.close()
 
     def _btnconfig(self):
         self.btnSrtDn.config(font=self.nfnt)
