@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 #@author: comet
 
-
 import tkinter as tk
 import tkinter.font as font
 from tkinter import filedialog
